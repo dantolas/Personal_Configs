@@ -1,10 +1,24 @@
+-- Set FAT cursor in insert
 vim.opt.guicursor = ""
 
+-- Line numbers and Relative line numbers
 vim.opt.nu = true
 vim.opt.relativenumber = true 
 
+--Line indenting
+vim.opt.tabstop = 4
+vim.opt.softtabstop = 4
+vim.opt.shiftwidth = 4
+vim.opt.expandtab = true
 vim.opt.smartindent = true
 
+--Undotree gains access to old changes
+vim.opt.swapfile = false
+vim.opt.backup = false
+vim.undodir = os.getenv("HOME") .. "/.vim/undodir"
+vim.opt.undofile = true
+
+--Nice looking search
 vim.opt.hlsearch = false
 vim.opt.incsearch = true
 
