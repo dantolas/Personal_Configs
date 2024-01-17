@@ -5,7 +5,6 @@ return{
         name = "plenary"
     },
     
-    
     {
 
         --FuGITive
