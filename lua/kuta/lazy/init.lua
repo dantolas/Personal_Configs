@@ -4,7 +4,6 @@ return{
         "nvim-lua/plenary.nvim",
         name = "plenary"
     },
-    
     {
 
         --FuGITive
@@ -14,8 +13,6 @@ return{
             vim.keymap.set("n","<C-g>",vim.cmd.Git)
         end
     },
-
-
     -- Undotree
     {
 
