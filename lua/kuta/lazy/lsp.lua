@@ -25,7 +25,8 @@ return{
                         'jdtls',
                         'jedi_language_server',
                         'jsonls',
-                        'kotlin_language_server'
+                        'kotlin_language_server',
+                        'lua_ls'
                     },
                     handlers = {
                         function(server_name)
@@ -43,6 +44,8 @@ return{
                                 }
                             }
                         end,
+                        ["jdtls"] = function()
+                        end
                     }
                 })
             end

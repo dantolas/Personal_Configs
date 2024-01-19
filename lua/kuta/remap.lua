@@ -13,18 +13,25 @@ vim.keymap.set("n", "J", "mzJ`z")
 --Cursor stays centered when half page jumping and searching
 vim.keymap.set("n", "<C-d>", "<C-d>zz")
 vim.keymap.set("n", "<C-u>", "<C-u>zz")
-vim.keymap.set("n", "n", "nzzz")
-vim.keymap.set("n", "N", "Nzzz")
+vim.keymap.set("n", "n", "nzz")
+vim.keymap.set("n", "N", "Nzz")
 
 --Paste without overwriting current copied buffer
 vim.keymap.set("x","<leader>p","\"_dP")
 
+--Paste from system clipboard
+vim.keymap.set("n","<leader>p","\"+p")
+vim.keymap.set("v","<leader>p","\"+p")
 --Copy to system clipboard
 vim.keymap.set("n","<leader>y","\"+y")
 vim.keymap.set("v","<leader>y","\"+y")
 
 --Delete to void register
 vim.keymap.set({"n", "v"}, "<leader>d", [["_d]])
+--Copy full path to current buffer
+vim.keymap.set("n","<leader>cap",":let @+ = expand(\"%:p\")")
+--Copy relative path to current buffer
+vim.keymap.set("n","<leader>crp",":let @+ = expand(\"%\")")
 
 --No capital Q, it's evil
 vim.keymap.set("n","Q","<nop")
@@ -41,6 +48,7 @@ vim.keymap.set("n", "<leader>s", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><
 --Make current file executable (Linux)
 vim.keymap.set("n", "<leader>x", "<cmd>!chmod +x %<CR>", { silent = true })
 
+--LSP stuff
 vim.api.nvim_create_autocmd('LspAttach',{
     group = kuta,
     callback = function(e)
