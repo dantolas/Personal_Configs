@@ -1,203 +1,142 @@
 return{
     "mfussenegger/nvim-jdtls",
+    ft = "java",
     config = function()
-        local jdtls = require("jdtls")
-        local jdtls_dap = require("jdtls.dap")
-        local jdtls_setup = require("jdtls.setup")
-        local home = os.getenv("HOME")
-
-        local root_markers = { ".git", "mvnw", "gradlew", "pom.xml", "build.gradle" }
-        root_dir = jdtls_setup.find_root(root_markers)
-
-        local project_name = vim.fn.fnamemodify(root_dir, ":p:h:t")
-        local workspace_dir = home .. "/.cache/jdtls/workspace" .. project_name
-
-        -- 💀
-        local path_to_mason_packages = home .. "/.local/share/nvim/mason/packages"
-
-        local path_to_jdtls = path_to_mason_packages .. "/jdtls"
-        local path_to_jdebug = path_to_mason_packages .. "/java-debug-adapter"
-        local path_to_jtest = path_to_mason_packages .. "/java-test"
-
-        local path_to_config = path_to_jdtls .. "/config_linux"
-        local lombok_path = path_to_jdtls .. "/lombok.jar"
-
-        -- 💀
-        local path_to_jar = path_to_jdtls .. "/plugins/org.eclipse.equinox.launcher_1.6.600.v20231106-1826.jar"
-
-        local bundles = {
-            vim.fn.glob(path_to_jdebug .. "/extension/server/com.microsoft.java.debug.plugin-*.jar", true),
-        }
-
-        vim.list_extend(bundles, vim.split(vim.fn.glob(path_to_jtest .. "/extension/server/*.jar", true), "\n"))
-
-        -- LSP settings for Java.
-        local on_attach = function(_, bufnr)
-            print("Ive attached")
-            jdtls.setup_dap({ hotcodereplace = "auto" })
-            jdtls_dap.setup_dap_main_class_configs()
-            jdtls_setup.add_commands()
-            print("I've setup")
-
-            -- Create a command `:Format` local to the LSP buffer
-            vim.api.nvim_buf_create_user_command(bufnr, "Format", function(_)
-                vim.lsp.buf.format()
-            end, { desc = "Format current buffer with LSP" })
-
-            require("lsp_signature").on_attach({
-                bind = true,
-                padding = "",
-                handler_opts = {
-                    border = "rounded",
-                },
-                hint_prefix = "󱄑 ",
-            }, bufnr)
-            vim.cmd [[
-        augroup jdtls_lsp
-        autocmd!
-        autocmd FileType java lua require'jdtls.jdtls_setup'.setup()
-        augroup end
-        ]]
-            print("Ive created commands")
-
+        local status_ok, jdtls = pcall(require, "jdtls")
+        if not status_ok then
+            return
         end
 
-        local capabilities = {
-            workspace = {
-                configuration = true
-            },
-            textDocument = {
-                completion = {
-                    completionItem = {
-                        snippetSupport = true
-                    }
-                }
-            }
-        }
+        local bufnr = vim.api.nvim_get_current_buf()
+
+        local java_debug_path = vim.fn.stdpath "data" .. "/mason/packages/java-debug-adapter/"
+        local jdtls_path = vim.fn.stdpath "data" .. "/mason/packages/jdtls/"
+        -- NOTE: Decrease the amount of files to improve speed(Experimental).
+        -- INFO: It's annoying to edit the version again and again.
+        local equinox_path = vim.split(vim.fn.glob(vim.fn.stdpath "data" .. "/mason/packages/jdtls/plugins/*jar"), "\n")
+        local equinox_launcher = ""
+
+        for _, file in pairs(equinox_path) do
+            if file:match "launcher_" then
+                equinox_launcher = file
+                break
+            end
+        end
+
+        WORKSPACE_PATH = vim.fn.stdpath "data" .. "/workspace/"
+        if vim.fn.has "mac" == 1 then
+            OS_NAME = "mac"
+        elseif vim.fn.has "unix" == 1 then
+            OS_NAME = "linux"
+        elseif vim.fn.has "win32" == 1 then
+            OS_NAME = "win"
+        else
+            vim.notify("Unsupported OS", vim.log.levels.WARN, { title = "Jdtls" })
+        end
+
+        local root_markers = { ".git", "mvnw", "gradlew", "pom.xml", "build.gradle" }
+
+        local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":p:h:t")
+
+        local workspace_dir = WORKSPACE_PATH .. project_name
 
         local config = {
-            flags = {
-                allow_incremental_sync = true,
-            }
-        }
+            cmd = {
+                -- 💀
+                "java", -- or '/path/to/java17_or_newer/bin/java'
+                -- depends on if `java` is in your $PATH env variable and if it points to the right version.
 
-        config.cmd = {
-            --
-            -- 				-- 💀
-            "java", -- or '/path/to/java17_or_newer/bin/java'
-            -- depends on if `java` is in your $PATH env variable and if it points to the right version.
+                "-Declipse.application=org.eclipse.jdt.ls.core.id1",
+                "-Dosgi.bundles.defaultStartLevel=4",
+                "-Declipse.product=org.eclipse.jdt.ls.core.product",
+                "-Dlog.protocol=true",
+                "-Dlog.level=ALL",
+                "-javaagent:" .. jdtls_path .. "/lombok.jar",
+                "-Xms1g",
+                "--add-modules=ALL-SYSTEM",
+                "--add-opens",
+                "java.base/java.util=ALL-UNNAMED",
+                "--add-opens",
+                "java.base/java.lang=ALL-UNNAMED",
+                -- 💀
+                "-jar",
+                equinox_launcher,
+                -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                       ^^^^^^^^^^^^^^
+                -- Must point to the                                                     Change this to
+                -- eclipse.jdt.ls installation                                           the actual version
+                -- 💀
+                "-configuration",
+                jdtls_path .. "config_" .. OS_NAME,
+                -- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        ^^^^^^
+                -- Must point to the                      Change to one of `linux`, `win` or `mac`
+                -- eclipse.jdt.ls installation            Depending on your system.
 
-            "-Declipse.application=org.eclipse.jdt.ls.core.id1",
-            "-Dosgi.bundles.defaultStartLevel=4",
-            "-Declipse.product=org.eclipse.jdt.ls.core.product",
-            "-Dlog.protocol=true",
-            "-Dlog.level=ALL",
-            "-Xmx1g",
-            "-javaagent:" .. lombok_path,
-            "--add-modules=ALL-SYSTEM",
-            "--add-opens",
-            "java.base/java.util=ALL-UNNAMED",
-            "--add-opens",
-            "java.base/java.lang=ALL-UNNAMED",
-
+                "-data",
+                workspace_dir,
+            },
+            on_attach =  function()
+            end,
+            capabilities = require "cmp_nvim_lsp".default_capabilities(),
             -- 💀
-            "-jar",
-            path_to_jar,
-            -- Must point to the                                                     Change this to
-            -- eclipse.jdt.ls installation                                           the actual version
-
-            -- 💀
-            "-configuration",
-            path_to_config,
-            -- Must point to the                      Change to one of `linux`, `win` or `mac`
-            -- eclipse.jdt.ls installation            Depending on your system.
-
-            -- 💀
-            -- See `data directory configuration` section in the README
-            "-data",
-            workspace_dir,
-        }
-
-        config.settings = {
-            java = {
-                references = {
-                    includeDecompiledSources = true,
+            -- This is the default if not provided, you can remove it. Or adjust as needed.
+            -- One dedicated LSP server & client will be started per unique root_dir
+            root_dir = require("jdtls.setup").find_root(root_markers),
+            init_options = {
+                bundles = {
+                    vim.fn.glob(java_debug_path .. "extension/server/com.microsoft.java.debug.plugin-*.jar", 1),
                 },
-                format = {
-                    enabled = true,
-                    settings = {
-                        url = vim.fn.stdpath("config") .. "/lang_servers/intellij-java-google-style.xml",
-                        profile = "GoogleStyle",
-                    },
-                },
+            },
+            settings = {
                 eclipse = {
                     downloadSources = true,
                 },
                 maven = {
                     downloadSources = true,
                 },
-                signatureHelp = { enabled = true },
-                contentProvider = { preferred = "fernflower" },
-                -- eclipse = {
-                -- 	downloadSources = true,
-                -- },
-                -- implementationsCodeLens = {
-                -- 	enabled = true,
-                -- },
-                completion = {
-                    favoriteStaticMembers = {
-                        "org.hamcrest.MatcherAssert.assertThat",
-                        "org.hamcrest.Matchers.*",
-                        "org.hamcrest.CoreMatchers.*",
-                        "org.junit.jupiter.api.Assertions.*",
-                        "java.util.Objects.requireNonNull",
-                        "java.util.Objects.requireNonNullElse",
-                        "org.mockito.Mockito.*",
-                    },
-                    filteredTypes = {
-                        "com.sun.*",
-                        "io.micrometer.shaded.*",
-                        "java.awt.*",
-                        "jdk.*",
-                        "sun.*",
-                    },
-                    importOrder = {
-                        "java",
-                        "javax",
-                        "com",
-                        "org",
-                    },
+                implementationsCodeLens = {
+                    enabled = true,
                 },
+                referencesCodeLens = {
+                    enabled = true,
+                },
+                references = {
+                    includeDecompiledSources = true,
+                },
+
+                signatureHelp = { enabled = true },
+                extendedClientCapabilities = require("jdtls").extendedClientCapabilities,
                 sources = {
                     organizeImports = {
                         starThreshold = 9999,
                         staticStarThreshold = 9999,
                     },
                 },
-                codeGeneration = {
-                    toString = {
-                        template = "${object.className}{${member.name()}=${member.value}, ${otherMembers}}",
-                    },
-                    useBlocks = true,
-                },
+            },
+            flags = {
+                allow_incremental_sync = true,
             },
         }
 
-        config.on_attach = on_attach
-        config.capabilities = capabilities
-        config.on_init = function(client, _)
-            client.notify('workspace/didChangeConfiguration', { settings = config.settings })
-        end
+        local keymap = vim.keymap.set
 
-        local extendedClientCapabilities = require 'jdtls'.extendedClientCapabilities
-        extendedClientCapabilities.resolveAdditionalTextEditsSupport = true
+        keymap("n", "A-o", ":lua require'jdtls'.organize_imports()<cr>", { silent = true, buffer = bufnr })
+        keymap("n", "crv", ":lua require'jdtls'.extract_variable()<cr>", { silent = true, buffer = bufnr })
+        keymap("v", "crv", "<Esc>:lua require'jdtls'.extract_variable(true)<cr>", { silent = true, buffer = bufnr })
+        keymap("n", "crc", ":lua require'jdtls'.extract_constant()<cr>", { silent = true, buffer = bufnr })
+        keymap("v", "crc", "<Esc>:lua require'jdtls'.extract_constant(true)<cr>", { silent = true, buffer = bufnr })
+        keymap("v", "crm", "<Esc>:lua require'jdtls'.extract_method(true)<cr>", { silent = true, buffer = bufnr })
 
-        config.init_options = {
-            bundles = bundles,
-            extendedClientCapabilities = extendedClientCapabilities,
-        }
+        vim.cmd [[
+    command! -buffer -nargs=? -complete=custom,v:lua.require'jdtls'._complete_compile JdtCompile lua require('jdtls').compile(<f-args>)
+    command! -buffer -nargs=? -complete=custom,v:lua.require'jdtls'._complete_set_runtime JdtSetRuntime lua require('jdtls').set_runtime(<f-args>)
+    command! -buffer JdtUpdateConfig lua require('jdtls').update_project_config()
+    command! -buffer JdtJol lua require('jdtls').jol()
+    command! -buffer JdtBytecode lua require('jdtls').javap()
+    command! -buffer JdtJshell lua require('jdtls').jshell()
+    ]]
 
-        -- Start Server
-        require('jdtls').start_or_attach(config)
+        -- This starts a new client & server,
+        -- or attaches to an existing client & server depending on the `root_dir`.
+        jdtls.start_or_attach(config)
     end
 }
