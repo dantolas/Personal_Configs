@@ -15,7 +15,15 @@ vim.opt.smartindent = true
 --Undotree gains access to old changes
 vim.opt.swapfile = false
 vim.opt.backup = false
-vim.undodir = os.getenv("HOME") .. "/.vim/undodir"
+local undoDir = "empty"
+
+if vim.g.osname == "win" then
+    undoDir = os.getenv("USERPROFILE") ..  "/.vim/undodir"
+else
+    undodir = os.getenv("HOME") ..  "/.vim/undodir"
+
+end
+vim.undodir = undoDir
 vim.opt.undofile = true
 
 --Nice looking search
