@@ -1,5 +1,5 @@
 local install_these_parsers = {
- "java","python","html","css", "lua", "vim", "vimdoc", "query","sql","javascript","typescript","markdown" 
+ "java","python","html","css", "lua", "vim", "vimdoc", "query","sql","javascript","typescript","markdown"
 }
 return{
 

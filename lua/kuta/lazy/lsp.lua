@@ -8,7 +8,6 @@ local lsp_servers = {
     "jdtls",
     "jedi_language_server",
     "jsonls",
-    "kotlin_language_server",
     "lua_ls",
 }
 return {
