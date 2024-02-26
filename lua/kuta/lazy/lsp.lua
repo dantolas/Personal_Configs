@@ -9,6 +9,7 @@ local lsp_servers = {
     "jedi_language_server",
     "jsonls",
     "lua_ls",
+    "html",
 }
 return {
     "neovim/nvim-lspconfig",

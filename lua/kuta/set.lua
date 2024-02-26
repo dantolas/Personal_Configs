@@ -3,7 +3,7 @@ vim.opt.guicursor = ""
 
 -- Line numbers and Relative line numbers
 vim.opt.nu = true
-vim.opt.relativenumber = true 
+vim.opt.relativenumber = true
 
 --Line indenting
 vim.opt.tabstop = 4

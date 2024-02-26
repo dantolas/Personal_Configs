@@ -4,7 +4,8 @@ vim.g.mapleader = " "
 vim.keymap.set("n", "<leader>ko",vim.cmd.Ex)
 --CTRL C should function the same as escape, something with vertical save idk theprimeagem said it
 vim.keymap.set("n","<C-c>","<Esc>")
-
+--Remove trailing whitespace
+vim.keymap.set('n', '<Leader>rws', [[:%s/\s\+$//e<cr>]])
 --Move highlited lines up and down with capital J and K
 vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
 vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
@@ -21,6 +22,7 @@ vim.keymap.set("x","<leader>p","\"_dP")
 
 --Paste from system clipboard
 vim.keymap.set("n","<leader>p","\"+p")
+-- Set buftype to non-empty (e.g. nowrite) to prevent Neovim asking the file has changed question (:help W12)                                                                                                    
 vim.keymap.set("v","<leader>p","\"+p")
 --Copy to system clipboard
 vim.keymap.set("n","<leader>y","\"+y")
@@ -67,3 +69,4 @@ vim.api.nvim_create_autocmd('LspAttach',{
         vim.keymap.set("i", "<C-h>", function() vim.lsp.buf.signature_help() end, opts)
     end
 })
+
