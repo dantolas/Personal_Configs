@@ -15,8 +15,7 @@ local function run_curr_python_file()
     -- Press keys to run python command on current file
     vim.api.nvim_feedkeys(py_cmd, "t", false)
 end
+return {
 
-vim.keymap.set({'n'}, '<A-r>', '', { 
-    desc = "Run .py file via Neovim built-in terminal", 
-    callback = run_curr_python_file
-})
+    vim.keymap.set({'n'}, '<leader>pr','lua require "python".run_curr_python_file()')
+}

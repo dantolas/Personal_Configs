@@ -9,9 +9,13 @@ return{
     {
         "savq/melange-nvim",
         name = "melange",
-        config = function()
-            vim.cmd("colorscheme melange")
-            ColorTheme()
-        end
     },
+    {
+        "xero/miasma.nvim",
+        lazy = false,
+        priority = 1000,
+    },
+    {
+        "rebelot/kanagawa.nvim"
+    }
 }

@@ -20,7 +20,7 @@ local undoDir = "empty"
 if vim.g.osname == "win" then
     undoDir = os.getenv("USERPROFILE") ..  "/.vim/undodir"
 else
-    undodir = os.getenv("HOME") ..  "/.vim/undodir"
+    undoDir = os.getenv("HOME") ..  "/.vim/undodir"
 
 end
 vim.undodir = undoDir

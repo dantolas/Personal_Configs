@@ -10,6 +10,7 @@ local lsp_servers = {
     "jsonls",
     "lua_ls",
     "html",
+    "volar"
 }
 return {
     "neovim/nvim-lspconfig",
@@ -38,7 +39,6 @@ return {
     config = function()
         local lspconfig = require("lspconfig")
         local cmp_nvim_lsp = require("cmp_nvim_lsp")
-        local on_attach = function(client, bufnr) end
         local capabilities = vim.tbl_deep_extend(
             "force",
             vim.lsp.protocol.make_client_capabilities(),
@@ -57,7 +57,13 @@ return {
         })
 
         -- ALL SERVERS ARE SETUP HERE
-        for i,server in pairs(lsp_servers) do
+        for _,server in pairs(lsp_servers) do
+
+            if(server == "volar") then
+                lspconfig[server].setup{
+                    filetypes = {'vue','typescript','javascript'}
+                }
+            end
 
             --Skip jdtls setup
             if(server == "jdtls") then
@@ -68,7 +74,6 @@ return {
             if(server == "lua_ls") then
 
                 lspconfig[server].setup({
-                    on_attach = on_attach,
                     capabilities = capabilities,
                     settings = {
                         Lua = {
@@ -81,12 +86,44 @@ return {
                 goto continue
             end
             lspconfig[server].setup({
-                on_attach = on_attach,
                 capabilities = capabilities,
             })
 
             ::continue::
         end
 
-    end,
+        -- Solve some LSP conflicts
+        local lsp_conficts, _ = pcall(vim.api.nvim_get_autocmds, { group = "LspAttach_conflicts" })
+        if not lsp_conficts then
+            vim.api.nvim_create_augroup("LspAttach_conflicts", {})
+        end
+        vim.api.nvim_create_autocmd("LspAttach", {
+            group = "LspAttach_conflicts",
+            desc = "prevent tsserver and volar competing",
+            callback = function(args)
+                if not (args.data and args.data.client_id) then
+                    return
+                end
+                local active_clients = vim.lsp.get_active_clients()
+                local client = vim.lsp.get_client_by_id(args.data.client_id)
+                -- prevent tsserver and volar competing
+                if client.name == "volar" then
+                    for _, client_ in pairs(active_clients) do
+                        -- stop tsserver if volar is already active
+                        if client_.name == "tsserver" then
+                            client_.stop()
+                        end
+                    end
+                elseif client.name == "tsserver" then
+                    for _, client_ in pairs(active_clients) do
+                        -- prevent tsserver from starting if volar is already active
+                        if client_.name == "volar" then
+                            client.stop()
+                        end
+                    end
+                end
+            end,
+        })
+
+   end,
 }

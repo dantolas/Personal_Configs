@@ -16,41 +16,33 @@ vim.keymap.set("n", "<C-d>", "<C-d>zz")
 vim.keymap.set("n", "<C-u>", "<C-u>zz")
 vim.keymap.set("n", "n", "nzz")
 vim.keymap.set("n", "N", "Nzz")
-
 --Paste without overwriting current copied buffer
 vim.keymap.set("x","<leader>p","\"_dP")
-
 --Paste from system clipboard
 vim.keymap.set("n","<leader>p","\"+p")
--- Set buftype to non-empty (e.g. nowrite) to prevent Neovim asking the file has changed question (:help W12)                                                                                                    
+-- Set buftype to non-empty (e.g. nowrite) to prevent Neovim asking the file has changed question
 vim.keymap.set("v","<leader>p","\"+p")
 --Copy to system clipboard
 vim.keymap.set("n","<leader>y","\"+y")
 vim.keymap.set("v","<leader>y","\"+y")
-
 --Delete to void register
 vim.keymap.set({"n", "v"}, "<leader>d", [["_d]])
 --Copy full path to current buffer
 vim.keymap.set("n","<leader>cap",":let @+ = expand(\"%:p\")")
 --Copy relative path to current buffer
 vim.keymap.set("n","<leader>crp",":let @+ = expand(\"%\")")
-
 --No capital Q, it's evil
 vim.keymap.set("n","Q","<nop")
-
 --LSP suggestions navigation
-vim.keymap.set("n", "<C-k>", "<cmd>cnext<CR>zz")
-vim.keymap.set("n", "<C-j>", "<cmd>cprev<CR>zz")
-vim.keymap.set("n", "<leader>k", "<cmd>lnext<CR>zz")
-vim.keymap.set("n", "<leader>j", "<cmd>lprev<CR>zz")
-
+--vim.keymap.set("n", "<C-k>", "<cmd>cnext<CR>zz")
+--vim.keymap.set("n", "<C-j>", "<cmd>cprev<CR>zz")
+--vim.keymap.set("n", "<leader>k", "<cmd>lnext<CR>zz")
+--vim.keymap.set("n", "<leader>j", "<cmd>lprev<CR>zz")
 --Find and replace current word
 vim.keymap.set("n", "<leader>s", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]])
-
 --Make current file executable (Linux)
 vim.keymap.set("n", "<leader>x", "<cmd>!chmod +x %<CR>", { silent = true })
-
---LSP stuff
+--LSP bindings
 vim.api.nvim_create_autocmd('LspAttach',{
     group = kuta,
     callback = function(e)
@@ -69,4 +61,5 @@ vim.api.nvim_create_autocmd('LspAttach',{
         vim.keymap.set("i", "<C-h>", function() vim.lsp.buf.signature_help() end, opts)
     end
 })
-
+--Auto completion bindings
+-- Bindings can be found in lazy/cmp.lua
